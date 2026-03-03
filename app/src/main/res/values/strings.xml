@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">AntTP Android</string>
+    <string name="proxy_service_channel_name">Proxy Service Channel</string>
+    <string name="proxy_service_notification_title">AntTP Proxy is running</string>
+    <string name="proxy_service_notification_text">Monitoring network traffic</string>
+    <string name="stop_proxy">Stop Proxy</string>
+    <string name="start_proxy">Start Proxy</string>
+</resources>
