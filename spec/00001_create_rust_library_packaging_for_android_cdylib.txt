@@ -1,0 +1,24 @@
+### EPIC B — Rust Library Packaging for Android (`cdylib`)
+**Goal:** Build AntTP as an Android-loadable `.so` and call it from Kotlin via JNI.
+
+#### Story B1 — Convert/prepare Rust crate for `cdylib`
+- Task B1.1: Update `Cargo.toml` with `[lib] crate-type = ["cdylib"]`.
+- Task B1.2: Confirm crate builds as library without CLI-only assumptions.
+- Task B1.3: Add Android-compatible logging approach (at least ensure logs don’t panic; logcat bridge optional).
+
+#### Story B2 — JNI bridge (Rust exports + Kotlin externs)
+- Task B2.1: Define Kotlin `Native` API (`start(...)`, `stop()`).
+- Task B2.2: Implement Rust JNI `start` entrypoint (spawn runtime thread; return immediately).
+- Task B2.3: Implement Rust JNI `stop` entrypoint (trigger shutdown; join thread).
+- Task B2.4: Add “idempotent start” guard on Rust side.
+- Task B2.5: Add minimal error reporting strategy (log errors; optional status getter).
+
+**Acceptance Criteria (Epic B):**
+- Kotlin can call `Native.start()` and `Native.stop()` without deadlocks.
+- Rust engine runs on a background thread and terminates cleanly.
+
+Implementation Notes
+
+- Place any unit tests at the bottom of the same file as the associated production code
+- Increment patch version of anttp_android package in Cargo.toml
+- Create a copy of this issue description and save to /spec using the name of this issue as the filename (with lower underscore case, starting with the 5 char padded issue number, e.g. 00001_issue_title.txt)
