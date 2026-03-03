@@ -1,4 +1,4 @@
-package com.anttp
+package uk.co.antnode.anttp
 
 import android.app.*
 import android.content.Context
@@ -13,7 +13,7 @@ class ProxyForegroundService : Service() {
     companion object {
         const val CHANNEL_ID = "ProxyServiceChannel"
         const val NOTIFICATION_ID = 1
-        const val ACTION_STOP = "com.anttp.ACTION_STOP"
+        const val ACTION_STOP = "uk.co.antnode.anttp.ACTION_STOP"
         
         private var isRunning = false
         fun isRunning() = isRunning

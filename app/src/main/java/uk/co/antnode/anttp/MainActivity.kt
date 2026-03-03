@@ -1,4 +1,4 @@
-package com.anttp
+package uk.co.antnode.anttp
 
 import android.content.Intent
 import android.os.Bundle

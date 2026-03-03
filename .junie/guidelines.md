@@ -58,7 +58,7 @@ mod tests {
 
 ### JNI Naming Conventions
 JNI functions MUST follow the naming convention `Java_<package_name>_<class_name>_<method_name>`.
-Example: `Java_com_anttp_Native_start`.
+Example: `Java_uk_co_antnode_anttp_Native_start`.
 
 ### Threading & Runtime
 - **Tokio Runtime**: The Rust side manages its own Tokio runtime. When starting from JNI, spawn the runtime on a background thread to avoid blocking the Android Main Thread.
