@@ -28,7 +28,7 @@
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Proxy for network traffic" />
+                android:value="Proxy for Autonomi network traffic" />
         </service>
         
     </application>
