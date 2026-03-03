@@ -37,7 +37,7 @@ class ProxyForegroundService : Service() {
         isRunning = true
         startForegroundService()
         
-        // TODO: Start native engine here
+        Native.start()
         
         return START_STICKY
     }
@@ -83,7 +83,7 @@ class ProxyForegroundService : Service() {
 
     override fun onDestroy() {
         isRunning = false
-        // TODO: Stop native engine here
+        Native.stop()
         super.onDestroy()
     }
 
