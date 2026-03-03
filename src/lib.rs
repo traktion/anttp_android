@@ -1,3 +1,4 @@
+use anttp::AppConfig;
 use jni::objects::JClass;
 use jni::JNIEnv;
 use once_cell::sync::Lazy;
@@ -32,10 +33,12 @@ pub extern "system" fn Java_uk_co_antnode_anttp_Native_start(
 
         rt.block_on(async move {
             println!("AntTP: Engine starting on background thread...");
-            // TODO: Start the actual Actix server / proxy logic here
             
-            // Wait for shutdown signal
-            let _ = rx.await;
+            let app_config = AppConfig::default();
+            if let Err(e) = anttp::run_server(app_config).await {
+                eprintln!("AntTP: Server error: {:?}", e);
+            }
+            
             println!("AntTP: Engine shutting down...");
         });
     });
@@ -47,8 +50,8 @@ pub extern "system" fn Java_uk_co_antnode_anttp_Native_stop(
     _class: JClass,
 ) {
     let mut control = RUNTIME_CONTROL.lock().unwrap();
-    if let Some(tx) = control.take() {
-        let _ = tx.send(());
+    if let Some(_tx) = control.take() {
+        anttp::stop_server();
         println!("AntTP: Shutdown signal sent");
     } else {
         eprintln!("AntTP: Engine not running");

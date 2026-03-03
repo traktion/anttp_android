@@ -1,0 +1,20 @@
+### EPIC D — Clean Shutdown Wiring (AntTP `ServerHandle` → JNI stop)
+**Goal:** `Native.stop()` reliably stops the AntTP server and unblocks the Rust thread.
+
+#### Story D1 — Expose and store AntTP run server
+- Task D1.1: Add 'anttp' to 'Cargo.toml'
+- Task D1.2: Ensure AntTP is started by replacing '// TODO: Start the actual Actix server / proxy logic here)' with 'anttp::run_server(app_config).await' (where app_config has defaults)
+
+#### Story D2 — Implement graceful shutdown
+- Task D2.1: Ensure anttp::stop_server is called to stop the server
+- Task D2.2: Ensure `run_server(...).await` returns after stop.
+- Task D2.3: Add timeout strategy (optional): if graceful shutdown hangs, fall back to forced stop.
+
+**Acceptance Criteria (Epic D):**
+- Starting then stopping from Android closes the listening ports promptly.
+- No orphan runtime threads remain.
+
+Implementation Notes
+
+- Increment patch version of anttp_android package in Cargo.toml
+- Create a copy of this issue description and save to /spec using the name of this issue as the filename (with lower underscore case, starting with the 5 char padded issue number, e.g. 00001_issue_title.txt)
