@@ -37,7 +37,7 @@ class ProxyForegroundService : Service() {
         isRunning = true
         startForegroundService()
         
-        Native.start()
+        Native.start(filesDir.absolutePath)
         
         return START_STICKY
     }
