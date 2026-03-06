@@ -15,3 +15,5 @@ anttp = { version = "0.25", default-features = false }
 clap = { version = "4.5", features = ["derive"] }
 rmcp = { version = "=0.12.0", features = ["transport-streamable-http-server-session"] }
 rmcp-actix-web = "=0.9.4"
+log = "0.4"
+android_logger = "0.14"

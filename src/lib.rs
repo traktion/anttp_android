@@ -1,22 +1,51 @@
 use anttp::config::anttp_config::AntTpConfig;
-use jni::objects::JClass;
+use jni::objects::{JClass, JString};
 use jni::JNIEnv;
+use log::{error, info, warn, LevelFilter};
+use android_logger::{Config, FilterBuilder};
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 use tokio::runtime::Runtime;
 use tokio::sync::oneshot;
+use tokio::time::{timeout, Duration};
 use clap::Parser;
 
 static RUNTIME_CONTROL: Lazy<Mutex<Option<oneshot::Sender<()>>>> = Lazy::new(|| Mutex::new(None));
 
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_uk_co_antnode_anttp_Native_start(
-    _env: JNIEnv,
+    mut env: JNIEnv,
     _class: JClass,
+    data_dir: JString,
 ) {
+    android_logger::init_once(
+        Config::default()
+            .with_max_level(LevelFilter::Trace)
+            .with_tag("AntTP")
+            .with_filter(
+                FilterBuilder::new()
+                    .parse("info,anttp=info,ant_api=warn,ant_client=warn,autonomi::networking=error,ant_bootstrap=error,chunk_streamer=info")
+                    .build(),
+            ),
+    );
+
+    let data_dir: String = match env.get_string(&data_dir) {
+        Ok(s) => s.into(),
+        Err(e) => {
+            error!("AntTP: Failed to get data_dir from JNI: {:?}", e);
+            return;
+        }
+    };
+
+    if let Err(e) = std::env::set_current_dir(&data_dir) {
+        error!("AntTP: Failed to set current directory to {}: {:?}", data_dir, e);
+    } else {
+        info!("AntTP: Set current directory to {}", data_dir);
+    }
+
     let mut control = RUNTIME_CONTROL.lock().unwrap();
     if control.is_some() {
-        eprintln!("AntTP: Engine already running");
+        warn!("AntTP: Engine already running");
         return;
     }
 
@@ -27,20 +56,20 @@ pub extern "system" fn Java_uk_co_antnode_anttp_Native_start(
         let rt = match Runtime::new() {
             Ok(rt) => rt,
             Err(e) => {
-                eprintln!("AntTP: Failed to create Tokio runtime: {:?}", e);
+                error!("AntTP: Failed to create Tokio runtime: {:?}", e);
                 return;
             }
         };
 
         rt.block_on(async move {
-            println!("AntTP: Engine starting on background thread...");
+            info!("AntTP: Engine starting on background thread...");
 
             let app_config = AntTpConfig::try_parse_from(&["anttp", "--grpc-disabled"]).unwrap();
             if let Err(e) = anttp::run_server(app_config).await {
-                eprintln!("AntTP: Server error: {:?}", e);
+                error!("AntTP: Server error: {:?}", e);
             }
             
-            println!("AntTP: Engine shutting down...");
+            info!("AntTP: Engine shutting down...");
         });
     });
 }
@@ -52,30 +81,26 @@ pub extern "system" fn Java_uk_co_antnode_anttp_Native_stop(
 ) {
     let mut control = RUNTIME_CONTROL.lock().unwrap();
     if let Some(_tx) = control.take() {
-        let rt = match Runtime::new() {
-            Ok(rt) => rt,
-            Err(e) => {
-                eprintln!("AntTP: Failed to create Tokio runtime for stop: {:?}", e);
-                return;
-            }
-        };
+        std::thread::spawn(move || {
+            let rt = match Runtime::new() {
+                Ok(rt) => rt,
+                Err(e) => {
+                    error!("AntTP: Failed to create Tokio runtime for stop: {:?}", e);
+                    return;
+                }
+            };
 
-        rt.block_on(async {
-            match anttp::stop_server().await {
-                Ok(_) => println!("AntTP: Shutdown successful"),
-                Err(e) => eprintln!("AntTP: Shutdown error: {}", e),
-            }
+            rt.block_on(async move {
+                info!("AntTP: Shutdown requested...");
+                match timeout(Duration::from_secs(5), anttp::stop_server()).await {
+                    Ok(Ok(_)) => info!("AntTP: Shutdown successful"),
+                    Ok(Err(e)) => error!("AntTP: Shutdown error: {}", e),
+                    Err(_) => warn!("AntTP: Shutdown timed out, server might still be stopping"),
+                }
+            });
         });
-        println!("AntTP: Shutdown signal sent");
+        info!("AntTP: Shutdown signal initiated");
     } else {
-        eprintln!("AntTP: Engine not running");
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+        warn!("AntTP: Engine not running");
     }
 }

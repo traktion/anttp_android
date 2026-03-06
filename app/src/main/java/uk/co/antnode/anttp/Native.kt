@@ -5,6 +5,6 @@ object Native {
         System.loadLibrary("anttp_android")
     }
 
-    external fun start()
+    external fun start(dataDir: String)
     external fun stop()
 }
